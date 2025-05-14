@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import {
   FaTemperatureHigh,
@@ -13,20 +13,20 @@ import {
 
 const API_KEY = "4edc04df0c2727cd8d6e8355f37e759e";
 
-interface WeatherClientProps {
-  id: string;
-}
+type WeatherClientProps = {
+  cityId: string;
+};
 
-interface CityFields {
+type CityFields = {
   name: string;
   coordinates: [number, number];
-}
+};
 
-interface GeoResponse {
+type GeoResponse = {
   records: { fields: CityFields }[];
-}
+};
 
-interface WeatherData {
+type WeatherData = {
   main: {
     temp: number;
     feels_like: number;
@@ -39,21 +39,19 @@ interface WeatherData {
   weather: {
     description: string;
   }[];
-}
+};
 
-const WeatherClient: React.FC<WeatherClientProps> = ({ id }) => {
+export default function WeatherClient({ cityId }: WeatherClientProps) {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [cityData, setCityData] = useState<CityFields | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!id) return;
-
     const fetchData = async () => {
       try {
         const geoRes = await axios.get<GeoResponse>(
-          `https://public.opendatasoft.com/api/records/1.0/search/?dataset=geonames-all-cities-with-a-population-1000&q=${id}`
+          `https://public.opendatasoft.com/api/records/1.0/search/?dataset=geonames-all-cities-with-a-population-1000&q=${cityId}`
         );
 
         const city = geoRes.data.records?.[0];
@@ -78,7 +76,7 @@ const WeatherClient: React.FC<WeatherClientProps> = ({ id }) => {
     };
 
     fetchData();
-  }, [id]);
+  }, [cityId]);
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div className="text-danger">{error}</div>;
@@ -135,6 +133,4 @@ const WeatherClient: React.FC<WeatherClientProps> = ({ id }) => {
       </div>
     </div>
   );
-};
-
-export default WeatherClient;
+}
