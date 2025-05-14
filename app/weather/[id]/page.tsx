@@ -9,46 +9,25 @@ import {
   FaWind,
   FaCloud,
 } from "react-icons/fa";
-import dynamic from "next/dynamic";
-import "leaflet/dist/leaflet.css";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import L from "leaflet";
-
-// Fix for Leaflet icon issue
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: require("leaflet/dist/images/marker-icon-2x.png"),
-  iconUrl: require("leaflet/dist/images/marker-icon.png"),
-  shadowUrl: require("leaflet/dist/images/marker-shadow.png"),
-});
-
-interface WeatherParams {
-  params: {
-    id: string;
-  };
-}
 
 const API_KEY = "4edc04df0c2727cd8d6e8355f37e759e";
 
-// Dynamically import MapContainer to avoid client-side issues
-const Map = dynamic(
-  () => import("react-leaflet").then((mod) => mod.MapContainer),
-  { ssr: false }
-);
-
-const WeatherPage = ({ params }: WeatherParams) => {
+// Updated WeatherPage component to correctly handle params
+const WeatherPage = ({ params }: { params: { id: string } }) => {
   const [weatherData, setWeatherData] = useState<any>(null);
   const [cityData, setCityData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const geoId = params.id as string;
+    // Ensure params.id exists before proceeding
+    if (!params.id) return;
+
     const fetchData = async () => {
       try {
         // Fetch city data from GeoNames
         const geoRes = await axios.get(
-          `https://public.opendatasoft.com/api/records/1.0/search/?dataset=geonames-all-cities-with-a-population-1000&q=${geoId}`
+          `https://public.opendatasoft.com/api/records/1.0/search/?dataset=geonames-all-cities-with-a-population-1000&q=${params.id}`
         );
 
         const city = geoRes.data.records?.[0];
@@ -75,7 +54,7 @@ const WeatherPage = ({ params }: WeatherParams) => {
     };
 
     fetchData();
-  }, [params.id]);
+  }, [params.id]); // Dependency on params.id to refetch when it's available
 
   if (loading) return <div>Loading...</div>;
 
@@ -83,8 +62,7 @@ const WeatherPage = ({ params }: WeatherParams) => {
 
   if (!cityData || !weatherData) return <div>No data available</div>;
 
-  const { name, coordinates } = cityData;
-  const [lat, lon] = coordinates;
+  const { name } = cityData;
 
   return (
     <div className="container mt-5">
@@ -134,25 +112,6 @@ const WeatherPage = ({ params }: WeatherParams) => {
             <span>{weatherData.weather[0].description}</span>
           </li>
         </ul>
-      </div>
-
-      {/* Map Section */}
-      <div className="mt-4">
-        <h4 className="mb-3">📍 Location on Map</h4>
-        <MapContainer
-          center={[lat, lon]}
-          zoom={10}
-          scrollWheelZoom={false}
-          style={{ height: "400px", width: "100%", borderRadius: "10px" }}
-        >
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
-          />
-          <Marker position={[lat, lon]}>
-            <Popup>{name}</Popup>
-          </Marker>
-        </MapContainer>
       </div>
     </div>
   );

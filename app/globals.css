@@ -2,6 +2,8 @@
   --background: #ffffff;
   --foreground: #171717;
 }
+/* Add this to your global CSS file */
+@import "leaflet/dist/leaflet.css";
 
 @media (prefers-color-scheme: dark) {
   :root {
