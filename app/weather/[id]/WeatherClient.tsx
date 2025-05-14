@@ -49,13 +49,15 @@ export default function WeatherClient({ cityId }: WeatherClientProps) {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoading(true);
+        setError(null); // Reset error state
         const geoRes = await axios.get<GeoResponse>(
           `https://public.opendatasoft.com/api/records/1.0/search/?dataset=geonames-all-cities-with-a-population-1000&q=${cityId}`
         );
 
         const city = geoRes.data.records?.[0];
         if (!city) {
-          setError("City not found");
+          setError("City not found. Please try another search.");
           return;
         }
 
@@ -67,8 +69,8 @@ export default function WeatherClient({ cityId }: WeatherClientProps) {
         );
 
         setWeatherData(weatherRes.data);
-      } catch {
-        setError("Error fetching weather data");
+      } catch (err) {
+        setError("Error fetching data. Please try again later.");
       } finally {
         setLoading(false);
       }
@@ -77,7 +79,7 @@ export default function WeatherClient({ cityId }: WeatherClientProps) {
     fetchData();
   }, [cityId]);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div>Loading city and weather data...</div>;
   if (error) return <div className="text-danger">{error}</div>;
   if (!cityData || !weatherData) return <div>No data available</div>;
 
