@@ -1,3 +1,5 @@
+// app/weather/[id]/page.tsx
+
 import WeatherClient from "./WeatherClient";
 
 interface PageProps {

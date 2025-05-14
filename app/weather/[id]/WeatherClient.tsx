@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
@@ -12,7 +13,7 @@ import {
 
 const API_KEY = "4edc04df0c2727cd8d6e8355f37e759e";
 
-interface Props {
+interface WeatherClientProps {
   id: string;
 }
 
@@ -40,23 +41,19 @@ interface WeatherData {
   }[];
 }
 
-const WeatherClient: React.FC<Props> = ({ id }) => {
+const WeatherClient: React.FC<WeatherClientProps> = ({ id }) => {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [cityData, setCityData] = useState<CityFields | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!id) return;
+
     const fetchData = async () => {
       try {
         const geoRes = await axios.get<GeoResponse>(
-          `https://public.opendatasoft.com/api/records/1.0/search/`,
-          {
-            params: {
-              dataset: "geonames-all-cities-with-a-population-1000",
-              q: id,
-            },
-          }
+          `https://public.opendatasoft.com/api/records/1.0/search/?dataset=geonames-all-cities-with-a-population-1000&q=${id}`
         );
 
         const city = geoRes.data.records?.[0];
@@ -69,15 +66,7 @@ const WeatherClient: React.FC<Props> = ({ id }) => {
         const [lat, lon] = city.fields.coordinates;
 
         const weatherRes = await axios.get<WeatherData>(
-          `https://api.openweathermap.org/data/2.5/weather`,
-          {
-            params: {
-              lat,
-              lon,
-              appid: API_KEY,
-              units: "metric",
-            },
-          }
+          `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
         );
 
         setWeatherData(weatherRes.data);
