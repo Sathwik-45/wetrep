@@ -11,6 +11,7 @@ import {
   FaTemperatureLow,
 } from "react-icons/fa";
 
+// Define types for City and Weather Data
 interface City {
   recordid: string;
   fields: {
@@ -44,12 +45,14 @@ const CitiesTable = () => {
   const [loading, setLoading] = useState(false);
   const loader = useRef<HTMLDivElement | null>(null);
 
+  // Reset cities when search changes
   useEffect(() => {
     setCities([]);
     setWeatherMap({});
     setPage(0);
   }, [search]);
 
+  // Load cities with weather data
   useEffect(() => {
     const loadCities = async () => {
       if (loading) return;
@@ -91,10 +94,10 @@ const CitiesTable = () => {
                   },
                 }
               );
-              const forecasts: Forecast[] = weatherRes.data.list;
+              const forecasts = weatherRes.data.list;
               let min = Number.POSITIVE_INFINITY;
               let max = Number.NEGATIVE_INFINITY;
-              forecasts.forEach((f) => {
+              forecasts.forEach((f: Forecast) => {
                 min = Math.min(min, f.main.temp_min);
                 max = Math.max(max, f.main.temp_max);
               });
@@ -105,12 +108,7 @@ const CitiesTable = () => {
                   max: Math.round(max),
                 },
               }));
-            } catch (err: unknown) {
-              if (err instanceof Error) {
-                console.error(err.message);
-              } else {
-                console.error("An unknown error occurred");
-              }
+            } catch {
               setWeatherMap((prev) => ({
                 ...prev,
                 [city.fields.geoname_id]: { min: null, max: null },
@@ -118,7 +116,7 @@ const CitiesTable = () => {
             }
           }
         }
-      } catch (err) {
+      } catch (err: unknown) {
         console.error("Error loading cities", err);
       } finally {
         setLoading(false);
@@ -126,8 +124,9 @@ const CitiesTable = () => {
     };
 
     loadCities();
-  }, [page, search]);
+  }, [page, search, cities, loading]); // Added cities and loading as dependencies
 
+  // Infinite Scroll
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting) {
@@ -135,12 +134,9 @@ const CitiesTable = () => {
       }
     });
 
-    const loaderElement = loader.current; // Store the reference value in a variable
-
-    if (loaderElement) observer.observe(loaderElement);
-
+    if (loader.current) observer.observe(loader.current);
     return () => {
-      if (loaderElement) observer.unobserve(loaderElement);
+      if (loader.current) observer.unobserve(loader.current);
     };
   }, []);
 
@@ -206,14 +202,14 @@ const CitiesTable = () => {
                   {weather?.max != null
                     ? `${weather.max} °C`
                     : loading
-                    ? "..."
+                    ? "... "
                     : "N/A"}
                 </td>
                 <td>
                   {weather?.min != null
                     ? `${weather.min} °C`
                     : loading
-                    ? "..."
+                    ? "... "
                     : "N/A"}
                 </td>
               </tr>
@@ -223,7 +219,7 @@ const CitiesTable = () => {
       </table>
 
       {loading && <div className="text-center text-secondary">Loading...</div>}
-      <div ref={loader}></div>
+      <div ref={loader} style={{ height: "100px" }} />
     </div>
   );
 };
