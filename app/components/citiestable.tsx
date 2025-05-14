@@ -27,6 +27,13 @@ interface WeatherData {
   max: number | null;
 }
 
+interface Forecast {
+  main: {
+    temp_min: number;
+    temp_max: number;
+  };
+}
+
 const API_KEY = "4edc04df0c2727cd8d6e8355f37e759e";
 
 const CitiesTable = () => {
@@ -37,14 +44,12 @@ const CitiesTable = () => {
   const [loading, setLoading] = useState(false);
   const loader = useRef<HTMLDivElement | null>(null);
 
-  // Reset cities when search changes
   useEffect(() => {
     setCities([]);
     setWeatherMap({});
     setPage(0);
   }, [search]);
 
-  // Load cities
   useEffect(() => {
     const loadCities = async () => {
       if (loading) return;
@@ -86,10 +91,10 @@ const CitiesTable = () => {
                   },
                 }
               );
-              const forecasts = weatherRes.data.list;
+              const forecasts: Forecast[] = weatherRes.data.list;
               let min = Number.POSITIVE_INFINITY;
               let max = Number.NEGATIVE_INFINITY;
-              forecasts.forEach((f: any) => {
+              forecasts.forEach((f) => {
                 min = Math.min(min, f.main.temp_min);
                 max = Math.max(max, f.main.temp_max);
               });
@@ -100,7 +105,12 @@ const CitiesTable = () => {
                   max: Math.round(max),
                 },
               }));
-            } catch {
+            } catch (err: unknown) {
+              if (err instanceof Error) {
+                console.error(err.message);
+              } else {
+                console.error("An unknown error occurred");
+              }
               setWeatherMap((prev) => ({
                 ...prev,
                 [city.fields.geoname_id]: { min: null, max: null },
@@ -116,10 +126,8 @@ const CitiesTable = () => {
     };
 
     loadCities();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, search]);
 
-  // Infinite Scroll
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting) {
@@ -127,9 +135,12 @@ const CitiesTable = () => {
       }
     });
 
-    if (loader.current) observer.observe(loader.current);
+    const loaderElement = loader.current; // Store the reference value in a variable
+
+    if (loaderElement) observer.observe(loaderElement);
+
     return () => {
-      if (loader.current) observer.unobserve(loader.current);
+      if (loaderElement) observer.unobserve(loaderElement);
     };
   }, []);
 
@@ -212,7 +223,7 @@ const CitiesTable = () => {
       </table>
 
       {loading && <div className="text-center text-secondary">Loading...</div>}
-      <div ref={loader} style={{ height: "100px" }} />
+      <div ref={loader}></div>
     </div>
   );
 };
