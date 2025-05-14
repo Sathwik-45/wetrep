@@ -12,10 +12,18 @@ import {
 
 const API_KEY = "4edc04df0c2727cd8d6e8355f37e759e";
 
-// Type Definitions for Weather and City Data
-interface CityData {
+// Define types
+interface ParamsProps {
+  params: { id: string };
+}
+
+interface CityFields {
   name: string;
   coordinates: [number, number];
+}
+
+interface GeoResponse {
+  records: { fields: CityFields }[];
 }
 
 interface WeatherData {
@@ -25,28 +33,26 @@ interface WeatherData {
     humidity: number;
     pressure: number;
   };
-  weather: Array<{
-    description: string;
-  }>;
   wind: {
     speed: number;
   };
+  weather: {
+    description: string;
+  }[];
 }
 
-const WeatherPage = ({ params }: { params: { id: string } }) => {
+const WeatherPage: React.FC<ParamsProps> = ({ params }) => {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
-  const [cityData, setCityData] = useState<CityData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [cityData, setCityData] = useState<CityFields | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Ensure params.id exists before proceeding
     if (!params.id) return;
 
     const fetchData = async () => {
       try {
-        // Fetch city data from GeoNames API
-        const geoRes = await axios.get(
+        const geoRes = await axios.get<GeoResponse>(
           `https://public.opendatasoft.com/api/records/1.0/search/?dataset=geonames-all-cities-with-a-population-1000&q=${params.id}`
         );
 
@@ -57,16 +63,14 @@ const WeatherPage = ({ params }: { params: { id: string } }) => {
         }
 
         setCityData(city.fields);
-        const { coordinates } = city.fields;
-        const [lat, lon] = coordinates;
+        const [lat, lon] = city.fields.coordinates;
 
-        // Fetch weather data from OpenWeatherMap API
-        const weatherRes = await axios.get(
+        const weatherRes = await axios.get<WeatherData>(
           `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
         );
 
         setWeatherData(weatherRes.data);
-      } catch (err) {
+      } catch {
         setError("Error fetching weather data");
       } finally {
         setLoading(false);
@@ -74,20 +78,16 @@ const WeatherPage = ({ params }: { params: { id: string } }) => {
     };
 
     fetchData();
-  }, [params.id]); // Dependency on params.id to refetch when it's available
+  }, [params.id]);
 
   if (loading) return <div>Loading...</div>;
-
   if (error) return <div className="text-danger">{error}</div>;
-
   if (!cityData || !weatherData) return <div>No data available</div>;
-
-  const { name } = cityData;
 
   return (
     <div className="container mt-5">
       <div className="card shadow-lg p-4">
-        <h2 className="mb-4 text-primary">🌤️ Weather in {name}</h2>
+        <h2 className="mb-4 text-primary">🌤️ Weather in {cityData.name}</h2>
         <ul className="list-group list-group-flush fs-5">
           <li className="list-group-item d-flex justify-content-between align-items-center">
             <span>
