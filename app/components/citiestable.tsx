@@ -94,10 +94,10 @@ const CitiesTable = () => {
                   },
                 }
               );
-              const forecasts = weatherRes.data.list;
+              const forecasts: Forecast[] = weatherRes.data.list;
               let min = Number.POSITIVE_INFINITY;
               let max = Number.NEGATIVE_INFINITY;
-              forecasts.forEach((f: Forecast) => {
+              forecasts.forEach((f) => {
                 min = Math.min(min, f.main.temp_min);
                 max = Math.max(max, f.main.temp_max);
               });
@@ -108,7 +108,8 @@ const CitiesTable = () => {
                   max: Math.round(max),
                 },
               }));
-            } catch {
+            } catch (weatherErr: unknown) {
+              console.error("Weather fetch failed", weatherErr);
               setWeatherMap((prev) => ({
                 ...prev,
                 [city.fields.geoname_id]: { min: null, max: null },
@@ -124,7 +125,7 @@ const CitiesTable = () => {
     };
 
     loadCities();
-  }, [page, search, cities, loading]); // Added cities and loading as dependencies
+  }, [page, search]); // Removed cities and loading from dependencies
 
   // Infinite Scroll
   useEffect(() => {
