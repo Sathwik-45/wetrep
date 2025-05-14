@@ -12,9 +12,10 @@ import {
 
 const API_KEY = "4edc04df0c2727cd8d6e8355f37e759e";
 
-// Define types
-interface ParamsProps {
-  params: { id: string };
+interface PageProps {
+  params: {
+    id: string;
+  };
 }
 
 interface CityFields {
@@ -41,7 +42,7 @@ interface WeatherData {
   }[];
 }
 
-const WeatherPage: React.FC<ParamsProps> = ({ params }) => {
+const Page: React.FC<PageProps> = ({ params }) => {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [cityData, setCityData] = useState<CityFields | null>(null);
   const [loading, setLoading] = useState(true);
@@ -53,7 +54,13 @@ const WeatherPage: React.FC<ParamsProps> = ({ params }) => {
     const fetchData = async () => {
       try {
         const geoRes = await axios.get<GeoResponse>(
-          `https://public.opendatasoft.com/api/records/1.0/search/?dataset=geonames-all-cities-with-a-population-1000&q=${params.id}`
+          `https://public.opendatasoft.com/api/records/1.0/search/`,
+          {
+            params: {
+              dataset: "geonames-all-cities-with-a-population-1000",
+              q: params.id,
+            },
+          }
         );
 
         const city = geoRes.data.records?.[0];
@@ -66,7 +73,15 @@ const WeatherPage: React.FC<ParamsProps> = ({ params }) => {
         const [lat, lon] = city.fields.coordinates;
 
         const weatherRes = await axios.get<WeatherData>(
-          `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
+          `https://api.openweathermap.org/data/2.5/weather`,
+          {
+            params: {
+              lat,
+              lon,
+              appid: API_KEY,
+              units: "metric",
+            },
+          }
         );
 
         setWeatherData(weatherRes.data);
@@ -137,4 +152,4 @@ const WeatherPage: React.FC<ParamsProps> = ({ params }) => {
   );
 };
 
-export default WeatherPage;
+export default Page;
