@@ -12,10 +12,30 @@ import {
 
 const API_KEY = "4edc04df0c2727cd8d6e8355f37e759e";
 
-// Updated WeatherPage component to correctly handle params
+// Type Definitions for Weather and City Data
+interface CityData {
+  name: string;
+  coordinates: [number, number];
+}
+
+interface WeatherData {
+  main: {
+    temp: number;
+    feels_like: number;
+    humidity: number;
+    pressure: number;
+  };
+  weather: Array<{
+    description: string;
+  }>;
+  wind: {
+    speed: number;
+  };
+}
+
 const WeatherPage = ({ params }: { params: { id: string } }) => {
-  const [weatherData, setWeatherData] = useState<any>(null);
-  const [cityData, setCityData] = useState<any>(null);
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+  const [cityData, setCityData] = useState<CityData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,7 +45,7 @@ const WeatherPage = ({ params }: { params: { id: string } }) => {
 
     const fetchData = async () => {
       try {
-        // Fetch city data from GeoNames
+        // Fetch city data from GeoNames API
         const geoRes = await axios.get(
           `https://public.opendatasoft.com/api/records/1.0/search/?dataset=geonames-all-cities-with-a-population-1000&q=${params.id}`
         );
@@ -37,10 +57,10 @@ const WeatherPage = ({ params }: { params: { id: string } }) => {
         }
 
         setCityData(city.fields);
-        const { name, coordinates } = city.fields;
+        const { coordinates } = city.fields;
         const [lat, lon] = coordinates;
 
-        // Fetch weather data from OpenWeatherMap
+        // Fetch weather data from OpenWeatherMap API
         const weatherRes = await axios.get(
           `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
         );
